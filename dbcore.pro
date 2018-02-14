@@ -9,6 +9,9 @@ QT       -= core gui
 TARGET = dbcore
 TEMPLATE = lib
 
+CONFIG += staticlib #For static lib
+CONFIG += c++11
+
 DEFINES += DBCORE_LIBRARY
 
 SOURCES += \
