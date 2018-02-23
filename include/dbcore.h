@@ -2,18 +2,38 @@
 #define DBCORE_H
 
 #include <string>
+#include <mutex>
+#include <thread>
+#include <map>
 
-typedef struct sqlite3 sqlite3;
+#include "../sqlite/sqlite_util.h"
+
+#define DEF_PATH "data"
+#define DEF_DB_FILE_CHAIN "chain.db"
+#define DEF_DB_FILE_MAIN  "main.db"
+
+#define DEF_DB_TABLE_NAME_BLOCKHEADERS  "block_headers"
+
 
 class DBC {
-    sqlite3 * mMainDB = nullptr;
-    sqlite3 * mLastBlockDB = nullptr;
+    std::mutex mMutexDB; //This lock protects access to the main DBs
+    struct {
+        SQLiteDB Chain;
+        SQLiteDB Main;
+        std::map<std::string, SQLiteDB> Extras;
+    } mDB;
 
+    //Variables related to the main event loop
+
+
+    //Variables
+    std::string mPath;
 public:
-    DBC(){}
-    DBC(const std::string& path);
+    DBC(const std::string path = "data");
+    ~DBC(){}
 
-    //void intialize
+    bool check(bool force_recheck = true);
+
 };
 
 #endif // DBCORE_H

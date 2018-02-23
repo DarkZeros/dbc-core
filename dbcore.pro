@@ -15,16 +15,22 @@ CONFIG += c++11
 DEFINES += DBCORE_LIBRARY
 
 SOURCES += \
-    source/dbcore.cpp \
     sqlite/sqlite3.c \
+    sqlite/sha3sum.cpp \
     cryptopp/blake2.cpp \
-    sqlite/dbhash_funct.cpp
+    source/dbcore.cpp \
+    source/utils.cpp \
+    source/timer.cpp \
+    sqlite/sqlite_util.cpp
 
 HEADERS += \
     include/dbcore.h \
     sqlite/sqlite3.h \
+    sqlite/sha3sum.h \
     cryptopp/blake2.h \
-    sqlite/dbhash_funct.h
+    source/utils.h \
+    source/timer.h \
+    sqlite/sqlite_util.h
 
 unix {
     target.path = /usr/lib
