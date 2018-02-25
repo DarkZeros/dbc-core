@@ -18,19 +18,22 @@ SOURCES += \
     sqlite/sqlite3.c \
     sqlite/sha3sum.cpp \
     cryptopp/blake2.cpp \
-    source/dbcore.cpp \
     source/utils.cpp \
     source/timer.cpp \
-    sqlite/sqlite_util.cpp
+    sqlite/sqlite_util.cpp \
+    source/config.cpp \
+    source/core.cpp \
+    source/core.cpp
 
 HEADERS += \
-    include/dbcore.h \
     sqlite/sqlite3.h \
     sqlite/sha3sum.h \
     cryptopp/blake2.h \
     source/utils.h \
     source/timer.h \
-    sqlite/sqlite_util.h
+    sqlite/sqlite_util.h \
+    source/config.h \
+    source/core.h
 
 unix {
     target.path = /usr/lib

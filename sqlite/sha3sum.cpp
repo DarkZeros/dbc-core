@@ -691,7 +691,7 @@ static void sha3QueryFunc(
 int sqlite3_shathree_init(
   sqlite3 *db,
   char **pzErrMsg,
-  const sqlite3_api_routines *pApi
+  const sqlite3_api_routines *
 ){
   int rc = SQLITE_OK;
   (void)pzErrMsg;  /* Unused parameter */
@@ -731,9 +731,9 @@ std::vector<uint8_t> sqlite_SHA3(sqlite3 *db,
                                  const std::string& zLike,
                                  std::string * debug_out
                                  ){
-    sqlite3_stmt *pStmt;     /* For querying tables names */
-    char *zSql;              /* SQL to be run */
-    char *zSep;              /* Separator */
+    sqlite3_stmt *pStmt;       /* For querying tables names */
+    char * zSql;               /* SQL to be run */
+    const char *zSep;          /* Separator */
     std::string sSql;          /* Complete SQL for the query to run the hash */
     std::string sQuery;        /* Set of queries used to read all content */
 
@@ -743,18 +743,19 @@ std::vector<uint8_t> sqlite_SHA3(sqlite3 *db,
       if( sqlite3_strlike("sqlite_%", zLike.c_str(), 0)==0 )
           bSchema = true;
     }
+    const char * s;
     if( bSchema ){
-    zSql = "SELECT lower(name) FROM sqlite_master"
+        s = "SELECT lower(name) FROM sqlite_master"
            " WHERE type='table' AND coalesce(rootpage,0)>1"
            " UNION ALL SELECT 'sqlite_master'"
            " ORDER BY 1 collate nocase";
     }else{
-    zSql = "SELECT lower(name) FROM sqlite_master"
+        s = "SELECT lower(name) FROM sqlite_master"
            " WHERE type='table' AND coalesce(rootpage,0)>1"
            " AND name NOT LIKE 'sqlite_%'"
            " ORDER BY 1 collate nocase";
     }
-    sqlite3_prepare_v2(db, zSql, -1, &pStmt, 0);
+    sqlite3_prepare_v2(db, s, -1, &pStmt, 0);
     sSql += "WITH [sha3sum$query](a,b) AS(";
     zSep = "VALUES(";
   while( SQLITE_ROW==sqlite3_step(pStmt) ){
@@ -801,7 +802,6 @@ std::vector<uint8_t> sqlite_SHA3(sqlite3 *db,
   if( debug_out ){
     *debug_out = zSql;
   }else{
-      printf("%s\n", zSql);
     sqlite3_prepare_v2(db, zSql, -1, &pStmt, 0);
     if( sqlite3_step(pStmt) ){
       int size = sqlite3_column_bytes(pStmt,0);
