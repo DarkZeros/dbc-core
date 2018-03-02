@@ -26,8 +26,11 @@ public:
     Core(const std::string path = "data");
     ~Core(){}
 
+    bool reCreateDBs();
+    bool reOpenDBs();
+
     bool checkStructure(bool force_recheck = true);
-    bool checkPoW(bool force_recheck = true);
+    bool checkPoW(bool force_recheck = true){}
     bool checkData(bool force_recheck = true);
 };
 

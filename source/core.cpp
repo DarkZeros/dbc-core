@@ -18,10 +18,44 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName){
 }
 
 Core::Core(const std::string path) : mPath(path) {
+    //Open the DB to files
+    reOpenDBs();
+}
+
+bool Core::reCreateDBs(){
+    //Drop DBs (now they are read only if they were open)
+    system(("rm "+
+           buildPath(mPath,Config::getDBFilenames(Config::DBChain))+" "+
+           buildPath(mPath,Config::getDBFilenames(Config::DBMain))
+           ).c_str());
+
+    //Reopen them
+    reOpenDBs();
+
     //Lock all DBs
     std::unique_lock<std::mutex> lock(mMutexDB);
 
-    //Open the DB to files
+    //Build Structure of the DBs
+    SQLiteStmt s1(mDB.Chain, Config::getTableCreationSQL(Config::TChain));
+    int res = s1.step();
+    SQLiteStmt s2(mDB.Main, Config::getTableCreationSQL(Config::TAccounts));
+    res = s2.step();
+    SQLiteStmt s3(mDB.Main, Config::getTableCreationSQL(Config::TCerts));
+    res = s3.step();
+    SQLiteStmt s4(mDB.Main, Config::getTableCreationSQL(Config::TPrev_Certs));
+    res = s4.step();
+
+    return true; //OK
+}
+
+bool Core::reOpenDBs(){
+    //Lock all DBs
+    std::unique_lock<std::mutex> lock(mMutexDB);
+
+    //Ensure paths are created
+    system(("mkdir -p "+mPath).c_str());
+
+    //Open them (will close them if they are already open)
     mDB.Chain.swap(SQLiteDB(buildPath(mPath,Config::getDBFilenames(Config::DBChain))));
     mDB.Main.swap(SQLiteDB(buildPath(mPath,Config::getDBFilenames(Config::DBMain))));
 }
@@ -32,13 +66,18 @@ bool Core::checkStructure(bool force_recheck){
 
     //Check the chain db has the proper table(s) inside
     SQLiteStmt s1(mDB.Chain, "SELECT * FROM sqlite_master;");
-    if(s1.step() != SQLITE_ROW){
-        return false;
+    int c=0, r=0;
+    while(s1.step() == SQLITE_ROW){
+        //if(s1.getColumnText(0))
+        ;
     }
+    do{
+;
+    }while(s1.step() == SQLITE_ROW);
 
     //Check the main db has the proper table(s) inside
-    SQLiteStmt s1(mDB.Chain, "SELECT * FROM sqlite_master;");
-    if(s1.step() != SQLITE_ROW){
+    SQLiteStmt s2(mDB.Chain, "SELECT * FROM sqlite_master;");
+    if(s2.step() != SQLITE_ROW){
         return false;
     }
 

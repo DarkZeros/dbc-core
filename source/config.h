@@ -34,19 +34,19 @@ public:
     static constexpr int mNumVersions = 1;
     static constexpr std::array<int, mNumVersions> mVersion = {{0}};
 
-    static const std::string mDataBaseFilename[mNumVersions][EDataBase::DBSize];
+    static const char * mDataBaseFilename[mNumVersions][EDataBase::DBSize];
 
     //Used to create the tables, and cross check
-    static const std::string mTableCreationSQL[mNumVersions][ETable::TSize];
+    static const char * mTableCreationSQL[mNumVersions][ETable::TSize];
     //Used to cross check agains the "sqlite_master"
-    static const std::string mDataBaseMaster[mNumVersions][EDataBase::DBSize];
+    static const char * mDataBaseMaster[mNumVersions][EDataBase::DBSize];
 
 
     static int blockNum2Version(int blockNum);
 
-    static const std::string& getTableCreationSQL(ETable tableType, int blockNum = -1);
-    static const std::string& getDBMaster(EDataBase databaseType, int blockNum = -1);
-    static const std::string& getDBFilenames(EDataBase databaseType, int blockNum = -1);
+    static const char * getTableCreationSQL(ETable tableType, int blockNum = -1);
+    static const char * getDBMaster(EDataBase databaseType, int blockNum = -1);
+    static const char * getDBFilenames(EDataBase databaseType, int blockNum = -1);
 
 };
 
