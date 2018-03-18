@@ -1,0 +1,35 @@
+syntax = "proto2";
+
+package Client;
+
+
+// Send by both clients after stablishing the connection
+message Handshake {
+  //Version is required, because maybe a client is too old and incompatible
+  required string version = 1; 
+  optional string name = 2;
+  //Network the client is using, 1 is the main
+  enum NetworkType {
+    UNKNOWN = 0;
+    MAIN = 1;
+    TEST = 2;
+  }
+  optional NetworkType network = 3 [default = MAIN];
+
+  //Notify our state to others, so the other clients may request data
+  optional int64 blocknum = 4;
+  optional int64 pow = 5;
+}
+
+//Packages are single big blocks of data
+//Containing blocks, transactions, chains, requests, etc..
+message Package {
+  enum PackageType {
+    UNKNOWN = 0;
+    CHAIN_DATA = 1;
+    BLOCK_DATA = 2;
+    TX_DATA = 3;
+  }
+  required PackageType type = 1; //Package 
+  
+}

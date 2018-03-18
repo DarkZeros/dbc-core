@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "utils.h"
+#include "protobuf/client.pb.h"
 
 namespace DBC {
 

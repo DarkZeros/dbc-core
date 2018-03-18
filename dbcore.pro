@@ -23,7 +23,8 @@ SOURCES += \
     sqlite/sqlite_util.cpp \
     source/config.cpp \
     source/core.cpp \
-    source/core.cpp
+    source/core.cpp \
+    protobuf/client.pb.cc
 
 HEADERS += \
     sqlite/sqlite3.h \
@@ -33,9 +34,13 @@ HEADERS += \
     source/timer.h \
     sqlite/sqlite_util.h \
     source/config.h \
-    source/core.h
+    source/core.h \
+    protobuf/client.pb.h
 
 unix {
     target.path = /usr/lib
     INSTALLS += target
 }
+
+DISTFILES += \
+    protobuf/client.proto
