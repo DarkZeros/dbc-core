@@ -76,8 +76,11 @@ const char * Config::mTableCreationSQL[Config::mNumVersions][Config::ETable::TSi
 const char * Config::mDataBaseMaster[Config::mNumVersions][Config::EDataBase::DBSize] = {
 /// Version 0
 {
-    "",
-    "",
+    "table|chain|chain|3|CREATE TABLE chain (id INTEGER PRIMARY KEY,prev_hash BLOB NOT NULL,tx_root BLOB NOT NULL,db_root BLOB NOT NULL,nonces TEXT NOT NULL,timestamp INTEGER NOT NULL)",
+    "table|accounts|accounts|3|CREATE TABLE accounts (id INTEGER PRIMARY KEY,pub_key BLOB NOT NULL,balance INTEGER NOT NULL,tx_allow INTEGER NOT NULL,tx_count INTEGER NOT NULL,extra TEXT)\n"
+        "table|certs|certs|4|CREATE TABLE certs (id INTEGER PRIMARY KEY,account_id INTEGER UNIQUE NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,contract TEXT NOT NULL)\n"
+        "index|sqlite_autoindex_certs_1|certs|5|\n"
+        "table|prev_certs|prev_certs|6|CREATE TABLE prev_certs (id INTEGER PRIMARY KEY,block_num INTEGER NOT NULL,cert_num INTEGER NOT NULL,pub_key INTEGER NOT NULL,account_id INTEGER NOT NULL,cert_power INTEGER NOT NULL,contract TEXT NOT NULL)\n",
     ""
 }};
 

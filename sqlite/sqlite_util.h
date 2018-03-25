@@ -36,12 +36,15 @@ public:
     int mStatus;
 
     int step(); // SQLITE_BUSY, SQLITE_DONE, SQLITE_ROW, SQLITE_ERROR, or SQLITE_MISUSE
+    int columns();
+
+    std::string getSingleString(const char col_sep='|', const char row_sep='\n');
 
     const void *    getColumnBlob   (int col);
     double          getColumnDouble (int col);
     int             getColumnInt    (int col);
     int64_t         getColumnInt64  (int col);
-    const uint8_t * getColumnText   (int col);
+    const char *    getColumnText   (int col);
     const void *    getColumnText16 (int col);
 
     int getColumnBytes  (int col); //Total bytes of BLOB or string

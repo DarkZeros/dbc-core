@@ -1,4 +1,4 @@
-#include "core.h"
+﻿#include "core.h"
 
 #include "../sqlite/sqlite3.h"
 #include "../sqlite/sha3sum.h"
@@ -10,17 +10,14 @@
 
 namespace DBC {
 
-static int callback(void *NotUsed, int argc, char **argv, char **azColName){
-    for(int i=0; i<argc; i++){
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-    printf("\n");
-    return 0;
-}
-
 Core::Core(const std::string path) : mPath(path) {
     //Open the DB to files
     reOpenDBs();
+
+    //Check them to be valid
+    if(!checkStructure()){
+        reCreateDBs();
+    }
 }
 
 bool Core::reCreateDBs(){
@@ -66,26 +63,34 @@ bool Core::checkStructure(bool force_recheck){
     std::unique_lock<std::mutex> lock(mMutexDB);
 
     //Check the chain db has the proper table(s) inside
-    SQLiteStmt s1(mDB.Chain, "SELECT * FROM sqlite_master;");
-    int c=0, r=0;
-    while(s1.step() == SQLITE_ROW){
-        //if(s1.getColumnText(0))
-        ;
+    {
+        SQLiteStmt st(mDB.Chain, "SELECT * FROM sqlite_master;");
+        if(Config::getDBMaster(Config::DBChain) != st.getSingleString()){
+            return false;
+        }
     }
-    do{
-;
-    }while(s1.step() == SQLITE_ROW);
 
     //Check the main db has the proper table(s) inside
-    SQLiteStmt s2(mDB.Chain, "SELECT * FROM sqlite_master;");
-    if(s2.step() != SQLITE_ROW){
-        return false;
+    {
+        SQLiteStmt st(mDB.Main, "SELECT * FROM sqlite_master;");
+        if(Config::getDBMaster(Config::DBMain) != st.getSingleString()){
+            return false;
+        }
     }
 
     return true;
 }
 
-/*DBC::DBC(const std::string& path){
+/*
+static int callback(void *NotUsed, int argc, char **argv, char **azColName){
+    for(int i=0; i<argc; i++){
+        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+    }
+    printf("\n");
+    return 0;
+}
+
+DBC::DBC(const std::string& path){
     int rc = sqlite3_open(path.c_str(), &mMainDB);
     if( rc ){
         printf("Can't open database: %s\n", sqlite3_errmsg(mMainDB));
