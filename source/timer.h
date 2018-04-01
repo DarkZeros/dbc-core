@@ -13,6 +13,8 @@
 #include <atomic>
 #include <functional>
 
+namespace DBC {
+
 class Timer {
     struct Entry{
         uint32_t rate, counter;
@@ -37,5 +39,7 @@ public:
     void AddEntry(std::function<void()>& func, uint32_t rate_ms, uint32_t first_delay = 0);
 
 };
+
+} //namesppace DBC
 
 #endif // Timer_H

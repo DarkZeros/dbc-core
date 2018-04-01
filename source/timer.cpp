@@ -1,5 +1,7 @@
 #include "timer.h"
 
+namespace DBC {
+
 Timer::Timer(){
 
 }
@@ -75,3 +77,5 @@ private:
     std::condition_variable mCv;
     std::atomic<bool> mTimerExit;
 }*/
+
+} //namesppace DBC

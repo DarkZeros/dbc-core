@@ -1,6 +1,8 @@
 
 #include "utils.h"
 
+namespace DBC {
+
 static const char hex2str[] = "0123456789abcdef";
 
 std::string convert_string(const std::vector<uint8_t>& in){
@@ -35,3 +37,5 @@ std::string buildPath(const std::string& s1,const std::string& s2, const std::st
     auto res2 = buildPath(s3,s4);
     return buildPath(res1,res2);
 }
+
+} //namesppace DBC

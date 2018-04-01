@@ -21,6 +21,8 @@ Core::Core(const std::string path) : mPath(path) {
 }
 
 bool Core::reCreateDBs(){
+    Logger::log(DEBUG, "reCreateDBs");
+
     //Drop DBs (now they are read only if they were open)
     system(("rm "+
            buildPath(mPath,Config::getDBFilenames(Config::DBChain))+" "+

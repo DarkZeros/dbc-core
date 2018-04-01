@@ -24,7 +24,9 @@ SOURCES += \
     source/config.cpp \
     source/core.cpp \
     source/core.cpp \
-    protobuf/client.pb.cc
+    protobuf/client.pb.cc \
+    source/p2p.cpp \
+    source/logger.cpp
 
 HEADERS += \
     sqlite/sqlite3.h \
@@ -35,7 +37,9 @@ HEADERS += \
     sqlite/sqlite_util.h \
     source/config.h \
     source/core.h \
-    protobuf/client.pb.h
+    protobuf/client.pb.h \
+    source/p2p.h \
+    source/logger.h
 
 unix {
     target.path = /usr/lib
