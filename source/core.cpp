@@ -11,6 +11,15 @@
 namespace DBC {
 
 Core::Core(const std::string path) : mPath(path) {
+}
+
+void Core::initialize() {
+    //Start P2P system
+    //TODO
+
+    //Start event handler
+    //TODO
+
     //Open the DB to files
     reOpenDBs();
 
@@ -18,6 +27,7 @@ Core::Core(const std::string path) : mPath(path) {
     if(!checkStructure()){
         reCreateDBs();
     }
+    //TODO
 }
 
 bool Core::reCreateDBs(){

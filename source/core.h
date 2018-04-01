@@ -26,6 +26,8 @@ public:
     Core(const std::string path = "data");
     ~Core(){}
 
+    void initialize();
+
     bool reCreateDBs();
     bool reOpenDBs();
 
