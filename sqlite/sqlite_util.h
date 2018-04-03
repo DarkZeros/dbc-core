@@ -3,35 +3,38 @@
 
 #include <string>
 
+namespace SQL{
+
 typedef struct sqlite3 sqlite3;
 typedef struct sqlite3_stmt sqlite3_stmt;
 
-class SQLiteDB {
+class DB {
     sqlite3 * mDB = nullptr;
 public:
-    SQLiteDB();
-    SQLiteDB(const std::string& file);
+    DB();
+    DB(const std::string& file);
     //No asigment, only movable
-    SQLiteDB(const SQLiteDB&) = delete;
-    SQLiteDB& operator= (const SQLiteDB& ) = delete;
-    ~SQLiteDB();
+    DB(const DB&) = delete;
+    DB& operator= (const DB& ) = delete;
+    ~DB();
 
-    void swap(SQLiteDB&& o);
+    void swap(DB&& o);
     operator sqlite3 *(){ return mDB;}
     int mStatus;
 };
 
-class SQLiteStmt {
+class Stmt {
     sqlite3_stmt * mStmt = nullptr;
 public:
-    SQLiteStmt();
-    SQLiteStmt(sqlite3 * db, const std::string& stmt);
+    Stmt();
+    Stmt(DB& db, const std::string& stmt);
+    Stmt(sqlite3 * db, const std::string& stmt);
     //No asigment, only movable
-    SQLiteStmt(const SQLiteStmt&) = delete;
-    SQLiteStmt& operator= (const SQLiteStmt& ) = delete;
-    ~SQLiteStmt();
+    Stmt(const Stmt&) = delete;
+    Stmt& operator= (const Stmt& ) = delete;
+    ~Stmt();
 
-    void swap(SQLiteStmt&& o);
+    void swap(Stmt&& o);
     operator sqlite3_stmt *(){ return mStmt;}
     int mStatus;
 
@@ -52,5 +55,6 @@ public:
     int getColumnType   (int col); //SQLITE_INTEGER, SQLITE_FLOAT, SQLITE_TEXT, SQLITE_BLOB, or SQLITE_NULL
 };
 
+}//namespace SQL
 
 #endif // SQLITEW_H

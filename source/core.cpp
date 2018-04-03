@@ -13,9 +13,11 @@ namespace DBC {
 Core::Core(const std::string path) : mPath(path) {
 }
 
-void Core::initialize() {
+bool Core::initialize() {
     //Start P2P system
-    //TODO
+    if(mP2P.start()){
+        return false;
+    }
 
     //Start event handler
     //TODO
@@ -24,14 +26,16 @@ void Core::initialize() {
     reOpenDBs();
 
     //Check them to be valid
-    if(!checkStructure()){
+    if(checkStructure()){
         reCreateDBs();
     }
     //TODO
+
+    return false;
 }
 
 bool Core::reCreateDBs(){
-    Logger::log(DEBUG, "reCreateDBs");
+    Logger::log(CORE, DEBUG, "Re-creating DBs");
 
     //Drop DBs (now they are read only if they were open)
     system(("rm "+
@@ -46,19 +50,21 @@ bool Core::reCreateDBs(){
     std::unique_lock<std::mutex> lock(mMutexDB);
 
     //Build Structure of the DBs
-    SQLiteStmt s1(mDB.Chain, Config::getTableCreationSQL(Config::TChain));
+    SQL::Stmt s1(mDB.Chain, Config::getTableCreationSQL(Config::TChain));
     int res = s1.step();
-    SQLiteStmt s2(mDB.Main, Config::getTableCreationSQL(Config::TAccounts));
+    SQL::Stmt s2(mDB.Main, Config::getTableCreationSQL(Config::TAccounts));
     res = s2.step();
-    SQLiteStmt s3(mDB.Main, Config::getTableCreationSQL(Config::TCerts));
+    SQL::Stmt s3(mDB.Main, Config::getTableCreationSQL(Config::TCerts));
     res = s3.step();
-    SQLiteStmt s4(mDB.Main, Config::getTableCreationSQL(Config::TPrev_Certs));
+    SQL::Stmt s4(mDB.Main, Config::getTableCreationSQL(Config::TPrev_Certs));
     res = s4.step();
 
     return true; //OK
 }
 
 bool Core::reOpenDBs(){
+    Logger::log(CORE, DEBUG, "Re-opening DBs");
+
     //Lock all DBs
     std::unique_lock<std::mutex> lock(mMutexDB);
 
@@ -66,31 +72,39 @@ bool Core::reOpenDBs(){
     system(("mkdir -p "+mPath).c_str());
 
     //Open them (will close them if they are already open)
-    mDB.Chain.swap(SQLiteDB(buildPath(mPath,Config::getDBFilenames(Config::DBChain))));
-    mDB.Main.swap(SQLiteDB(buildPath(mPath,Config::getDBFilenames(Config::DBMain))));
+    mDB.Chain.swap(SQL::DB(buildPath(mPath,Config::getDBFilenames(Config::DBChain))));
+    mDB.Main.swap(SQL::DB(buildPath(mPath,Config::getDBFilenames(Config::DBMain))));
 }
 
 // This method will check the DBs structure (sqlite_master)
 bool Core::checkStructure(bool force_recheck){
+    Logger::log(CORE, DEBUG, "Checking DB structure...");
+
     std::unique_lock<std::mutex> lock(mMutexDB);
 
     //Check the chain db has the proper table(s) inside
     {
-        SQLiteStmt st(mDB.Chain, "SELECT * FROM sqlite_master;");
-        if(Config::getDBMaster(Config::DBChain) != st.getSingleString()){
-            return false;
+        auto master = SQL::Stmt(mDB.Chain, "SELECT * FROM sqlite_master;").getSingleString();
+        if(Config::getDBMaster(Config::DBChain) != master){
+            Logger::log(CORE, WARNING, "SQLiteMaster missmatch in Chain table");
+            Logger::log(CORE, DEBUG, master + " != " + Config::getDBMaster(Config::DBChain));
+            return true;
         }
     }
 
     //Check the main db has the proper table(s) inside
     {
-        SQLiteStmt st(mDB.Main, "SELECT * FROM sqlite_master;");
-        if(Config::getDBMaster(Config::DBMain) != st.getSingleString()){
-            return false;
+        auto master = SQL::Stmt(mDB.Main, "SELECT * FROM sqlite_master;").getSingleString();
+        if(Config::getDBMaster(Config::DBMain) != master){
+            Logger::log(CORE, WARNING, "SQLiteMaster missmatch in Main table");
+            Logger::log(CORE, DEBUG, master + " != " + Config::getDBMaster(Config::DBMain));
+            return true;
         }
     }
 
-    return true;
+    Logger::log(CORE, INFO, "DB structure correct");
+
+    return false;
 }
 
 /*
