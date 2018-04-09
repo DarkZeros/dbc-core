@@ -1,6 +1,7 @@
 #ifndef P2P_H
 #define P2P_H
 
+#include <vector>
 #include <map>
 #include <mutex>
 #include <atomic>
@@ -9,14 +10,22 @@
 
 namespace DBC {
 
+struct ClientData{
+    sockaddr_in addr;
+    std::vector<uint8_t> rxBuf;
+};
+
 class P2P {
     static constexpr char * mPort = "11250";
     static constexpr int mListenQueue = 10;
 
-    int mMainSocket = 0;
-    std::map<int, sockaddr_in> mClientSocket;
+    int mMainSocket = -1;
+    int mEventFd = -1;
+    std::map<int, ClientData> mClientSocket;
+
     std::atomic<bool> mRunning;
     std::thread mThread;
+    std::mutex mThreadMutex;
 public:
     P2P();
     ~P2P();
