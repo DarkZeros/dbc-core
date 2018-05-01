@@ -13,6 +13,7 @@ namespace DBC {
 struct ClientData{
     sockaddr_in addr;
     std::vector<uint8_t> rxBuf;
+    bool mHandshake = false;
 };
 
 class P2P {
@@ -25,7 +26,7 @@ class P2P {
 
     std::atomic<bool> mRunning;
     std::thread mThread;
-    std::mutex mThreadMutex;
+    std::mutex mThreadMutex, mDataMutex;
 public:
     P2P();
     ~P2P();
@@ -35,6 +36,7 @@ public:
 
     int thread_loop(void);
 
+    int getNumClients();
 };
 
 } //namesppace DBC

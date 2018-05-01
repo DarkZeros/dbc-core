@@ -25,6 +25,7 @@ P2P::~P2P(){
 
 bool P2P::start(){
     std::unique_lock<std::mutex> lock(mThreadMutex);
+    std::unique_lock<std::mutex> lock2(mDataMutex);
     Logger::log(LogType::P2P, DEBUG, "Starting P2P network");
 
     if(mRunning){
@@ -84,6 +85,7 @@ bool P2P::start(){
     }
 
     //Launch thread
+    mClientSocket.clear();
     mThread = std::thread(&P2P::thread_loop, this);
     mRunning = true;
 
@@ -126,6 +128,9 @@ int P2P::thread_loop(void) {
         if(event.data.fd == -2){
             break;
         }
+
+
+        std::unique_lock<std::mutex> lock(mDataMutex);
 
         //Process the socket that has data
         if(event.data.fd == -1){
@@ -175,6 +180,8 @@ int P2P::thread_loop(void) {
     //Stop epoll
     close(epfd);
 
+    std::unique_lock<std::mutex> lock(mDataMutex);
+
     //Stop all sockets
     for(auto& i : mClientSocket){
         close(i.first);
@@ -186,6 +193,16 @@ int P2P::thread_loop(void) {
     Logger::log(LogType::P2P, INFO, "thread stopped");
 
     return 0;
+}
+
+int P2P::getNumClients(){
+    std::unique_lock<std::mutex> lock(mDataMutex);
+
+    int num = 0;
+    for(auto& i : mClientSocket){
+        num += i.second.mHandshake;
+    }
+    return num;
 }
 
 } //namespace DBC
