@@ -10,6 +10,7 @@ typedef struct sqlite3_stmt sqlite3_stmt;
 
 class DB {
     sqlite3 * mDB = nullptr;
+    std::string mPath;
 public:
     DB();
     DB(const std::string& file);
@@ -21,6 +22,9 @@ public:
     void swap(DB&& o);
     operator sqlite3 *(){ return mDB;}
     int mStatus;
+
+    const std::string& getPath()const{return mPath;}
+    std::string masterString(bool rootpage = true);
 };
 
 class Stmt {

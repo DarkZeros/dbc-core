@@ -29,9 +29,9 @@ bool P2P::start(){
     Logger::log(LogType::P2P, DEBUG, "Starting P2P network");
 
     if(mRunning){
-        //Logger::log(LogType::P2P, INFO, "Stoping P2P network before starting it");
+        Logger::log(LogType::P2P, INFO, "P2P network already running");
         //stop();
-        return false; //Its ok
+        return true; //Its ok
     }
 
     //We first do the initialization of socket in the main thread
@@ -47,32 +47,32 @@ bool P2P::start(){
     hints.ai_socktype = SOCK_STREAM;
     if (getaddrinfo(NULL, mPort, &hints, &res) != 0) {
         Logger::log(LogType::P2P, ERROR, "getaddrinfo %d", errno);
-        return true;
+        return false;
     }
 
     // Create the socket
     mMainSocket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     if (mMainSocket == -1) {
         Logger::log(LogType::P2P, ERROR, "socket");
-        return true;
+        return false;
     }
 
     // Enable the socket to reuse the address
     if (setsockopt(mMainSocket, SOL_SOCKET, SO_REUSEADDR, &reuseaddr, sizeof(int)) == -1) {
         Logger::log(LogType::P2P, ERROR, "setsockopt %d", errno);
-        return true;
+        return false;
     }
 
     // Bind to the address
     if (bind(mMainSocket, res->ai_addr, res->ai_addrlen) == -1) {
         Logger::log(LogType::P2P, ERROR, "bind %d", errno);
-        return true;
+        return false;
     }
 
     // Listen
     if (listen(mMainSocket, mListenQueue) == -1) {
         Logger::log(LogType::P2P, ERROR, "listen %d", errno);
-        return true;
+        return false;
     }
     freeaddrinfo(res);
 
@@ -81,7 +81,7 @@ bool P2P::start(){
     mEventFd = eventfd(0,0);
     if(mEventFd == -1){
         Logger::log(LogType::P2P, ERROR, "Eventfd not set up %d", errno);
-        return true;
+        return false;
     }
 
     //Launch thread
@@ -89,7 +89,7 @@ bool P2P::start(){
     mThread = std::thread(&P2P::thread_loop, this);
     mRunning = true;
 
-    return false;
+    return true;
 }
 
 bool P2P::stop(){
@@ -144,7 +144,7 @@ int P2P::thread_loop(void) {
                 Logger::log(LogType::P2P, INFO, "Got a connection (id %d) from %s on port %d",
                         newsock, inet_ntoa(their_addr.sin_addr), htons(their_addr.sin_port));
                 //Add it to the client socket list & epoll
-                mClientSocket[newsock] = {their_addr};
+                mClientSocket[newsock] = {their_addr,{}};
                 event.events = EPOLLIN;
                 event.data.fd = newsock;
                 epoll_ctl(epfd, EPOLL_CTL_ADD, newsock, &event);
@@ -171,6 +171,7 @@ int P2P::thread_loop(void) {
 
                 //Process it
                 //TODO
+                
                 //For the time being just print it
                 Logger::log(LogType::P2P, DEBUG, "Client: %s", data.rxBuf.data());
             }

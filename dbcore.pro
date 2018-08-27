@@ -17,7 +17,6 @@ DEFINES += DBCORE_LIBRARY
 SOURCES += \
     sqlite/sqlite3.c \
     sqlite/sha3sum.cpp \
-    cryptopp/blake2.cpp \
     source/utils.cpp \
     source/timer.cpp \
     sqlite/sqlite_util.cpp \
@@ -26,7 +25,8 @@ SOURCES += \
     source/core.cpp \
     protobuf/client.pb.cc \
     source/p2p.cpp \
-    source/logger.cpp
+    source/logger.cpp \
+    source/miner.cpp
 
 HEADERS += \
     sqlite/sqlite3.h \
@@ -39,7 +39,8 @@ HEADERS += \
     source/core.h \
     protobuf/client.pb.h \
     source/p2p.h \
-    source/logger.h
+    source/logger.h \
+    source/miner.h
 
 unix {
     target.path = /usr/lib

@@ -1,5 +1,7 @@
 #include "config.h"
 
+#include "sqlite/sqlite_util.h"
+
 namespace DBC {
 
 //TODO: Possibly we will need to ensure that the blob sizes/text length/integer lengths are ok
@@ -15,6 +17,15 @@ namespace DBC {
 
 constexpr std::array<int, Config::mNumVersions> Config::mVersion;
 
+std::vector<std::vector<Config::ETable>> Config::mDBTables = {
+    {Config::ETable::TPowChain, Config::ETable::TBlockChain},
+
+    {Config::ETable::TAccounts, Config::ETable::TCerts, Config::ETable::TPrev_Certs},
+
+    {Config::ETable::TCertTransactions, Config::ETable::TMerkleHash_DB,
+     Config::ETable::TMerkleHash_TX},
+};
+
 const char * Config::mDataBaseFilename[Config::mNumVersions][Config::EDataBase::DBSize] = {
 /// Version 0
 {
@@ -26,7 +37,14 @@ const char * Config::mDataBaseFilename[Config::mNumVersions][Config::EDataBase::
 const char * Config::mTableCreationSQL[Config::mNumVersions][Config::ETable::TSize] = {
 /// Version 0
 {
-    "CREATE TABLE chain ("
+    "CREATE TABLE powchain ("
+        "id INTEGER PRIMARY KEY,"
+        "hash BLOB NOT NULL,"
+        "acc_pubkey BLOB NOT NULL,"
+        "nonce BLOB NOT NULL,"
+        "timestamp INTEGER NOT NULL"
+    ");",
+    "CREATE TABLE blockchain ("
         "id INTEGER PRIMARY KEY,"
         "prev_hash BLOB NOT NULL,"
         "tx_root BLOB NOT NULL,"
@@ -76,7 +94,8 @@ const char * Config::mTableCreationSQL[Config::mNumVersions][Config::ETable::TSi
 const char * Config::mDataBaseMaster[Config::mNumVersions][Config::EDataBase::DBSize] = {
 /// Version 0
 {
-    "table|chain|chain|3|CREATE TABLE chain (id INTEGER PRIMARY KEY,prev_hash BLOB NOT NULL,tx_root BLOB NOT NULL,db_root BLOB NOT NULL,nonces TEXT NOT NULL,timestamp INTEGER NOT NULL)",
+    "table|powchain|powchain|3|CREATE TABLE powchain (id INTEGER PRIMARY KEY,hash BLOB NOT NULL,acc_pubkey BLOB NOT NULL,nonce BLOB NOT NULL,timestamp INTEGER NOT NULL)\n"
+        "table|blockchain|blockchain|4|CREATE TABLE blockchain (id INTEGER PRIMARY KEY,prev_hash BLOB NOT NULL,tx_root BLOB NOT NULL,db_root BLOB NOT NULL,nonces TEXT NOT NULL,timestamp INTEGER NOT NULL)",
     "table|accounts|accounts|3|CREATE TABLE accounts (id INTEGER PRIMARY KEY,pub_key BLOB NOT NULL,balance INTEGER NOT NULL,tx_allow INTEGER NOT NULL,tx_count INTEGER NOT NULL,extra TEXT)\n"
         "table|certs|certs|4|CREATE TABLE certs (id INTEGER PRIMARY KEY,account_id INTEGER UNIQUE NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,contract TEXT NOT NULL)\n"
         "index|sqlite_autoindex_certs_1|certs|5|\n"
@@ -94,11 +113,16 @@ int Config::blockNum2Version(int blockNum){
 const char * Config::getTableCreationSQL(ETable tableType, int blockNum){
     return mTableCreationSQL[blockNum2Version(blockNum)][tableType];
 }
-const char * Config::getDBMaster(EDataBase databaseType, int blockNum){
-    return mDataBaseMaster[blockNum2Version(blockNum)][databaseType];
-}
 const char * Config::getDBFilenames(EDataBase databaseType, int blockNum){
     return mDataBaseFilename[blockNum2Version(blockNum)][databaseType];
+}
+std::string Config::getDBMaster(EDataBase databaseType, bool rootpage, int blockNum){
+    SQL::DB mem(":memory:");
+    for(const auto& i : mDBTables[databaseType]){
+        SQL::Stmt st(mem, mTableCreationSQL[blockNum2Version(blockNum)][i]);
+        st.step();
+    }
+    return mem.masterString(rootpage);
 }
 
 } //namespace DBC

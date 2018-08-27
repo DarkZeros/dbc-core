@@ -3,6 +3,7 @@
 
 #include <string>
 #include <array>
+#include <vector>
 
 namespace DBC {
 
@@ -20,7 +21,9 @@ public:
         DBSize
     };
     enum ETable{
-        TChain,
+        TPowChain,
+        TBlockChain,
+
         TAccounts,
         TCerts,
         TPrev_Certs,
@@ -30,6 +33,7 @@ public:
         TMerkleHash_TX,
         TSize
     };
+    static std::vector<std::vector<ETable>> mDBTables;
 
     static constexpr int mNumVersions = 1;
     static constexpr std::array<int, mNumVersions> mVersion = {{0}};
@@ -45,8 +49,8 @@ public:
     static int blockNum2Version(int blockNum);
 
     static const char * getTableCreationSQL(ETable tableType, int blockNum = -1);
-    static const char * getDBMaster(EDataBase databaseType, int blockNum = -1);
     static const char * getDBFilenames(EDataBase databaseType, int blockNum = -1);
+    static std::string getDBMaster(EDataBase databaseType, bool rootpage = true, int blockNum = -1);
 
 };
 

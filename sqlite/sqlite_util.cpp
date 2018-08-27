@@ -6,6 +6,7 @@ namespace SQL{
 DB::DB() : mStatus(SQLITE_OK){
 }
 DB::DB(const std::string& file){
+    mPath = file;
     mStatus = sqlite3_open_v2(file.c_str(), &mDB, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
 }
 DB::~DB(){
@@ -16,6 +17,13 @@ DB::~DB(){
 void DB::swap(DB&& o){
     std::swap(o.mDB, mDB);
     std::swap(o.mStatus, mStatus);
+}
+
+std::string DB::masterString(bool rootpage){
+    SQL::Stmt s(*this, rootpage ?
+                    "SELECT * FROM sqlite_master;" :
+                    "SELECT type,name,tbl_name,sql FROM sqlite_master;");
+    return s.getSingleString();
 }
 
 

@@ -8,6 +8,8 @@
 
 #include "config.h"
 #include "p2p.h"
+#include "miner.h"
+#include "timer.h"
 #include "../sqlite/sqlite_util.h"
 
 namespace DBC {
@@ -18,8 +20,10 @@ class Core {
         SQL::DB Chain, Main, Extra;
     } mDB;
 
-    //Variables related to the main event loop
+    //Main modules
+    Timer mTimer;
     P2P mP2P;
+    Miner mMiner;
 
     //Variables
     std::string mPath;
@@ -33,7 +37,7 @@ public:
     bool reOpenDBs();
 
     bool checkStructure(bool force_recheck = true);
-    bool checkPoW(bool force_recheck = true){}
+    bool checkPoW(bool force_recheck = true){return false;}
     bool checkData(bool force_recheck = true);
 };
 

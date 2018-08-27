@@ -14,24 +14,31 @@ Core::Core(const std::string path) : mPath(path) {
 }
 
 bool Core::initialize() {
-    //Start P2P system
-    if(mP2P.start()){
-        return false;
-    }
-
-    //Start event handler
-    //TODO
-
     //Open the DB to files
     reOpenDBs();
 
     //Check them to be valid
-    if(checkStructure()){
-        reCreateDBs();
+    if(!checkStructure()){
+        if(!reCreateDBs()){
+            return false;
+        }
     }
+
+    //Start P2P system
+    if(!mP2P.start()){
+        return false;
+    }
+
+    //Start Mining system
+    if(!mMiner.start()){
+        return false;
+    }
+
+
+    //Start event handler
     //TODO
 
-    return false;
+    return true;
 }
 
 bool Core::reCreateDBs(){
@@ -50,14 +57,22 @@ bool Core::reCreateDBs(){
     std::unique_lock<std::mutex> lock(mMutexDB);
 
     //Build Structure of the DBs
-    SQL::Stmt s1(mDB.Chain, Config::getTableCreationSQL(Config::TChain));
-    int res = s1.step();
-    SQL::Stmt s2(mDB.Main, Config::getTableCreationSQL(Config::TAccounts));
-    res = s2.step();
-    SQL::Stmt s3(mDB.Main, Config::getTableCreationSQL(Config::TCerts));
-    res = s3.step();
-    SQL::Stmt s4(mDB.Main, Config::getTableCreationSQL(Config::TPrev_Certs));
-    res = s4.step();
+    for(const auto& t : Config::mDBTables[Config::EDataBase::DBChain]){
+        SQL::Stmt s(mDB.Chain, Config::getTableCreationSQL(t));
+        int res = s.step();
+        if(res != SQLITE_DONE){
+            Logger::log(CORE, ERROR, "Cannot create tables in DBChain");
+            return false;
+        }
+    }
+    for(const auto& t : Config::mDBTables[Config::EDataBase::DBMain]){
+        SQL::Stmt s(mDB.Main, Config::getTableCreationSQL(t));
+        int res = s.step();
+        if(res != SQLITE_DONE){
+            Logger::log(CORE, ERROR, "Cannot create tables in DBMain");
+            return false;
+        }
+    }
 
     return true; //OK
 }
@@ -74,6 +89,8 @@ bool Core::reOpenDBs(){
     //Open them (will close them if they are already open)
     mDB.Chain.swap(SQL::DB(buildPath(mPath,Config::getDBFilenames(Config::DBChain))));
     mDB.Main.swap(SQL::DB(buildPath(mPath,Config::getDBFilenames(Config::DBMain))));
+
+    return true;
 }
 
 // This method will check the DBs structure (sqlite_master)
@@ -84,27 +101,28 @@ bool Core::checkStructure(bool force_recheck){
 
     //Check the chain db has the proper table(s) inside
     {
-        auto master = SQL::Stmt(mDB.Chain, "SELECT * FROM sqlite_master;").getSingleString();
-        if(Config::getDBMaster(Config::DBChain) != master){
+        auto master = mDB.Chain.masterString(false);
+        auto master_original = Config::getDBMaster(Config::DBChain, false);
+        if(master_original != master){
             Logger::log(CORE, WARNING, "SQLiteMaster missmatch in Chain table");
-            Logger::log(CORE, DEBUG, master + " != " + Config::getDBMaster(Config::DBChain));
-            return true;
+            Logger::log(CORE, DEBUG, master + " != " + master_original);
+            return false;
         }
     }
 
     //Check the main db has the proper table(s) inside
     {
-        auto master = SQL::Stmt(mDB.Main, "SELECT * FROM sqlite_master;").getSingleString();
-        if(Config::getDBMaster(Config::DBMain) != master){
+        auto master = mDB.Main.masterString(false);
+        auto master_original = Config::getDBMaster(Config::DBMain, false);
+        if(master_original != master){
             Logger::log(CORE, WARNING, "SQLiteMaster missmatch in Main table");
-            Logger::log(CORE, DEBUG, master + " != " + Config::getDBMaster(Config::DBMain));
-            return true;
+            Logger::log(CORE, DEBUG, master + " != " + master_original);
+            return false;
         }
     }
 
     Logger::log(CORE, INFO, "DB structure correct");
-
-    return false;
+    return true;
 }
 
 /*
